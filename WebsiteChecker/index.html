@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body ng-controller="ctrl">
+    <div class="container" style="margin-top:20px;">
+        <h2>Website Checker</h2>
+        <p>(Check websites are live or down.)</p>
+        <hr/>
+        <div class="table" style="margin-top:20px;">
+                <div class="form-group">
+                    <label for="">Enter query string</label>
+                    <input type="text" ng-model='status' style="width:220px;" placeholder="search here..." class="form-control">
+                </div>
+                <table>
+                        <tr>
+                            <th><a href="#">Sno.</a></th>
+                            <th><a href="#" ng-click="sortBy('url')">Url</a></th>
+                            <th><a href="#" ng-click="sortBy('status')">Status</a></th>
+                            <th><a href="#">Link</a></th>
+                        </tr>
+                        <tr class="{{x.status | chkstatus}}" ng-repeat="x in urlDetails | filter:status | orderBy:sort">
+                            <th>{{$index+1}}.</th>
+                            <td>{{x.url}}</td>
+                            <td>{{x.status}}</td>
+                            <td><a target="_blank" href="{{x.url}}">View</a></td>
+                        </tr>
+                        <tr ng-show="loading">
+                            <td colspan="4" style="text-align:center">
+                                <img src="loading.gif" style="width:80px;height:25px;" alt="loading" />
+                            </td>
+                        </tr>
+                    </table>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.5/angular.min.js"></script>
+    <script>
+        var app = angular.module('app', []);
+        app.controller('ctrl', function($scope, $http){
+            $scope.urls = [];
+            $scope.urlDetails = [];
+            $scope.loading = true;
+
+            $scope.chkWeb = function(id){
+                $scope.loading = true;
+                $http.get('http://localhost/WebsiteChecker/chk.py?url='+$scope.urls[id][1])
+                .then(function(res){
+                    $scope.urlDetails.push({'url': $scope.urls[id][1], 'status': res.data});
+                    if (id<Object.keys($scope.urls).length-1){
+                        id +=1
+                        $scope.chkWeb(id);
+                    }else{
+                        $scope.loading = false;
+                    }
+                });
+            }
+
+            $scope.getUrls = function(){
+                $http.get('http://localhost/WebsiteChecker/geturls.py').then(function(res){
+                    $scope.urls = res.data;
+                    $scope.chkWeb(0);
+                    //console.log($scope.urls[0][1])
+                });
+            }
+            $scope.getUrls();
+
+            $scope.sortBy = function(data){
+                $scope.sort = data;
+            };
+        });
+
+        app.filter('chkstatus', function(){
+            return function(status){
+                if(status==200){
+                    return 'text-success';
+                }else if(status==404){
+                    return 'text-danger';
+                }else{
+                    return 'text-warning';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
