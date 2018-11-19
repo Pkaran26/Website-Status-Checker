@@ -1,14 +1,13 @@
 #!C:\Users\Anchal\AppData\Local\Programs\Python\Python37-32\python.exe
-import requests
+import urllib.request
 import cgi
 print ("Content-type:text/html\n")
 
 def chkUrl(url):
+    url.strip()
     try:
-        data = requests.get(url)
-        return data.status_code
+        return urllib.request.urlopen(url).getcode()
     except:
-        #requests.exceptions.ConnectionError as err
         return '404'
 
 param = cgi.FieldStorage()

@@ -12,6 +12,6 @@ mydb = mysql.connector.connect(
 )
 
 cur = mydb.cursor()
-cur.execute("select * from urls")
+cur.execute("select url from urls")
 res = cur.fetchall()
 print(json.dumps(res))

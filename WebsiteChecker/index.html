@@ -4,31 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Website Monitor</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
 </head>
 <body ng-controller="ctrl">
     <div class="container" style="margin-top:20px;">
-        <h2>Website Checker</h2>
+        <h2>Website Monitor</h2>
         <p>(Check websites are live or down.)</p>
         <hr/>
-        <div class="table" style="margin-top:20px;">
-                <div class="form-group">
-                    <label for="">Enter query string</label>
-                    <input type="text" ng-model='status' style="width:220px;" placeholder="search here..." class="form-control">
-                </div>
+        <div class="form-group table">
+            <label for="">Enter query string</label>
+            <input type="text" ng-model='status' style="width:220px;" placeholder="search here..." class="form-control">
+            <br/>
+            <p style="font-size:12px;" class="badge badge-primary">Total Down Websites: {{down}}</p>
+        </div>
+        <div class="table" style="margin-top:20px;height:400px;overflow: auto">
+                
                 <table>
                         <tr>
                             <th><a href="#">Sno.</a></th>
                             <th><a href="#" ng-click="sortBy('url')">Url</a></th>
                             <th><a href="#" ng-click="sortBy('status')">Status</a></th>
-                            <th><a href="#">Link</a></th>
                         </tr>
-                        <tr class="{{x.status | chkstatus}}" ng-repeat="x in urlDetails | filter:status | orderBy:sort">
+                        <tr ng-repeat="x in urlDetails | filter:status | orderBy:sort">
                             <th>{{$index+1}}.</th>
-                            <td>{{x.url}}</td>
-                            <td>{{x.status}}</td>
-                            <td><a target="_blank" href="{{x.url}}">View</a></td>
+                            <td>
+                                <a target="_blank" href="{{x.url}}">{{x.url}}</a>
+                            </td>
+                            <td>
+                                <span style="font-size:13px;" class="badge badge-pill badge-{{x.status | chkstatus}}">{{x.status}}</span>
+                            </td>
                         </tr>
                         <tr ng-show="loading">
                             <td colspan="4" style="text-align:center">
@@ -46,12 +51,18 @@
             $scope.urls = [];
             $scope.urlDetails = [];
             $scope.loading = true;
+            $scope.down = 0;
 
             $scope.chkWeb = function(id){
                 $scope.loading = true;
-                $http.get('http://localhost/WebsiteChecker/chk.py?url='+$scope.urls[id][1])
+                $http.get('http://localhost/WebsiteChecker/chk.py?url='+$scope.urls[id][0])
                 .then(function(res){
-                    $scope.urlDetails.push({'url': $scope.urls[id][1], 'status': res.data});
+                    
+                    if(res.data==404){
+                        //console.log(res.data);    
+                        $scope.down +=1;
+                    }
+                    $scope.urlDetails.push({'url': $scope.urls[id][0], 'status': res.data});
                     if (id<Object.keys($scope.urls).length-1){
                         id +=1
                         $scope.chkWeb(id);
@@ -65,7 +76,7 @@
                 $http.get('http://localhost/WebsiteChecker/geturls.py').then(function(res){
                     $scope.urls = res.data;
                     $scope.chkWeb(0);
-                    //console.log($scope.urls[0][1])
+                   // console.log($scope.urls[0])
                 });
             }
             $scope.getUrls();
@@ -78,14 +89,14 @@
         app.filter('chkstatus', function(){
             return function(status){
                 if(status==200){
-                    return 'text-success';
-                }else if(status==404){
-                    return 'text-danger';
+                    return 'success';
                 }else{
-                    return 'text-warning';
+                    return 'danger';
                 }
             };
         });
+
+      
     </script>
 </body>
 </html>
